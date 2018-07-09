@@ -1,5 +1,7 @@
 package net.unit8.jackson.dataformat.serverlog.impl;
 
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.io.IOContext;
 import net.unit8.jackson.dataformat.serverlog.ServerLogParser;
 import nl.basjes.parse.httpdlog.HttpdLoglineParser;
 
@@ -15,10 +17,49 @@ public class ServerLogDecoder {
     private LinkedList<String> keys = null;
     private Map<String, String> entries = null;
 
+    private boolean _closed;
+    private IOContext _ioContext;
+
+    /**
+     * Number of characters/bytes that were contained in previous blocks
+     * (blocks that were already processed prior to the current buffer)
+     */
+    protected long _currInputProcessed = 0L;
+
+    /**
+     * Current row location of current point in input buffer, starting
+     * from 1, if available.
+     */
+    protected int _currentInputRow = 1;
+
+    /**
+     * Current index of the first character of current row in input buffer.
+     */
+    protected int _currInputRowStart = 0;
+
+    /**
+     * Total number of bytes/characters read before start of current token.
+     */
+    protected long _tokenInputTotal = 0L;
+
+    /**
+     * Input row on which current token starts, 1-based.
+     */
+    protected int _tokenInputRow = 0;
+
+    /**
+     * Column on input row that current token starts; 0-based (although
+     * in the end it'll be converted to 1-based)
+     */
+    protected int _tokenInputCol = 0;
+
+
     public ServerLogDecoder(ServerLogParser owner,
+                            IOContext ctxt,
                             Reader r,
                             String logFormat) {
         this.owner = owner;
+        _ioContext = ctxt;
         if (r instanceof BufferedReader) {
             inputSource = (BufferedReader) r;
         } else {
@@ -48,5 +89,35 @@ public class ServerLogDecoder {
 
     public boolean startNewLine() throws IOException {
         return false;
+    }
+
+    public Object getInputSource() {
+        return inputSource;
+    }
+
+    public void close() throws IOException {
+        if (!_closed) {
+            _closed = true;
+            if (inputSource != null) {
+                if (_ioContext.isResourceManaged()) {
+                    inputSource.close();
+                }
+                inputSource = null;
+            }
+        }
+    }
+
+    public boolean isClosed() {
+        return _closed;
+    }
+
+    public JsonLocation getTokenLocation() {
+        //return new JsonLocation(inputSource,);
+        return null;
+    }
+
+    public JsonLocation getCurrentLocaion() {
+        //return new JsonLocation(inputSource, );
+        return null;
     }
 }

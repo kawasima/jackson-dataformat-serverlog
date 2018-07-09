@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.base.ParserMinimalBase;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.core.json.DupDetector;
 import com.fasterxml.jackson.core.json.JsonReadContext;
+import com.fasterxml.jackson.core.json.PackageVersion;
 import com.fasterxml.jackson.core.util.TextBuffer;
 import net.unit8.jackson.dataformat.serverlog.impl.ServerLogDecoder;
 
@@ -29,14 +30,16 @@ public class ServerLogParser extends ParserMinimalBase {
     protected final TextBuffer _textBuffer;
     protected String _currentName;
     protected String _currentValue;
+    protected ObjectCodec _objectCodec;
 
     public ServerLogParser(IOContext ctxt, Reader reader, int stdFeatures, ObjectCodec codec) {
         _textBuffer = ctxt.constructTextBuffer();
         String logformat = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
-        _reader = new ServerLogDecoder(this, reader, logformat);
+        _reader = new ServerLogDecoder(this, ctxt, reader, logformat);
         DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(stdFeatures)
                 ? DupDetector.rootDetector(this) : null;
         _parsingContext = JsonReadContext.createRootContext(dups);
+        _objectCodec = codec;
     }
 
     @Override
@@ -111,32 +114,32 @@ public class ServerLogParser extends ParserMinimalBase {
 
     @Override
     public String getCurrentName() throws IOException {
-        return null;
+        return _currentName;
     }
 
     @Override
     public ObjectCodec getCodec() {
-        return null;
+        return _objectCodec;
     }
 
     @Override
     public void setCodec(ObjectCodec objectCodec) {
-
+        _objectCodec = objectCodec;
     }
 
     @Override
     public Version version() {
-        return null;
+        return PackageVersion.VERSION;
     }
 
     @Override
     public void close() throws IOException {
-
+        _reader.close();
     }
 
     @Override
     public boolean isClosed() {
-        return false;
+        return _reader.isClosed();
     }
 
     @Override
@@ -146,12 +149,12 @@ public class ServerLogParser extends ParserMinimalBase {
 
     @Override
     public JsonLocation getTokenLocation() {
-        return null;
+        return _reader.getTokenLocation();
     }
 
     @Override
     public JsonLocation getCurrentLocation() {
-        return null;
+        return _reader.getCurrentLocaion();
     }
 
     @Override
