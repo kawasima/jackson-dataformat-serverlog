@@ -16,6 +16,8 @@ import java.math.BigInteger;
 import java.util.AbstractMap;
 
 public class ServerLogParser extends ParserMinimalBase {
+    protected final static ServerLogSchema DEFAULT_SCHEMA = ServerLogSchema.emptySchema();
+
     private enum ParseState {
         DOC_START,
         RECORD_START,
@@ -32,15 +34,45 @@ public class ServerLogParser extends ParserMinimalBase {
     protected String _currentValue;
     protected ObjectCodec _objectCodec;
 
+    protected ServerLogSchema _schema = DEFAULT_SCHEMA;
+
     public ServerLogParser(IOContext ctxt, Reader reader, int stdFeatures, ObjectCodec codec) {
         _textBuffer = ctxt.constructTextBuffer();
-        String logformat = "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
-        _reader = new ServerLogDecoder(this, ctxt, reader, logformat);
+        _reader = new ServerLogDecoder(this, ctxt, reader, _schema);
         DupDetector dups = JsonParser.Feature.STRICT_DUPLICATE_DETECTION.enabledIn(stdFeatures)
                 ? DupDetector.rootDetector(this) : null;
         _parsingContext = JsonReadContext.createRootContext(dups);
         _objectCodec = codec;
     }
+
+    @Override
+    public void setSchema(FormatSchema schema) {
+        if (schema instanceof ServerLogSchema) {
+            _schema = (ServerLogSchema) schema;
+        } else {
+            super.setSchema(schema);
+        }
+        _reader.setSchema(_schema);
+    }
+
+    @Override
+    public ServerLogSchema getSchema() {
+        return _schema;
+    }
+
+    @Override
+    public boolean canUseSchema(FormatSchema schema) {
+        return schema instanceof ServerLogSchema;
+    }
+
+    @Override
+    public boolean requiresCustomCodec() { return false;}
+
+    @Override
+    public boolean canReadObjectId() { return false; }
+
+    @Override
+    public boolean canReadTypeId() { return false; }
 
     @Override
     public JsonToken nextToken() throws IOException {
@@ -53,8 +85,14 @@ public class ServerLogParser extends ParserMinimalBase {
                 return (_currToken = _handleNextEntry());
             case NAMED_VALUE:
                 return (_currToken = _handleNamedValue());
+            case DOC_END:
+                _reader.close();
+                if (_parsingContext.inRoot()) {
+                    return null;
+                }
+                return JsonToken.END_OBJECT;
             default:
-                throw new IllegalStateException();
+                throw new IllegalStateException(_state.toString());
         }
     }
 
@@ -185,46 +223,54 @@ public class ServerLogParser extends ParserMinimalBase {
 
     @Override
     public boolean hasTextCharacters() {
-        return false;
+        if (_currToken == JsonToken.FIELD_NAME) {
+            return false;
+        }
+        return _textBuffer.hasTextAsCharacters();
     }
 
     @Override
     public Number getNumberValue() throws IOException {
-        return null;
+        return _noNumbers();
     }
 
     @Override
     public NumberType getNumberType() throws IOException {
-        return null;
+        return _noNumbers();
     }
 
     @Override
     public int getIntValue() throws IOException {
-        return 0;
+        return _noNumbers();
     }
 
     @Override
     public long getLongValue() throws IOException {
-        return 0;
+        return _noNumbers();
     }
 
     @Override
     public BigInteger getBigIntegerValue() throws IOException {
-        return null;
+        return _noNumbers();
     }
 
     @Override
     public float getFloatValue() throws IOException {
-        return 0;
+        return _noNumbers();
     }
 
     @Override
     public double getDoubleValue() throws IOException {
-        return 0;
+        return _noNumbers();
     }
 
     @Override
     public BigDecimal getDecimalValue() throws IOException {
+        return _noNumbers();
+    }
+
+    protected <T> T _noNumbers() throws IOException {
+        _reportError("Current token ("+_currToken+") not numeric, can not use numeric value accessors");
         return null;
     }
 
@@ -251,6 +297,7 @@ public class ServerLogParser extends ParserMinimalBase {
     }
 
     public JsonToken _handleRecordStart() {
+        _parsingContext = _reader.childObjectContext(_parsingContext);
         _state = ParseState.NEXT_ENTRY;
         return JsonToken.START_OBJECT;
     }

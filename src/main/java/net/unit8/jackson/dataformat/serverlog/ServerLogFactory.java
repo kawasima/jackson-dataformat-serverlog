@@ -1,7 +1,6 @@
 package net.unit8.jackson.dataformat.serverlog;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.IOContext;
 import net.unit8.jackson.dataformat.serverlog.impl.ServerLogDecoder;
 
@@ -9,6 +8,11 @@ import java.io.*;
 import java.net.URL;
 
 public class ServerLogFactory extends JsonFactory {
+    @Override
+    public boolean canUseSchema(FormatSchema schema) {
+        return schema instanceof ServerLogSchema;
+    }
+
     @Override
     public JsonParser createParser(File f) throws IOException {
         return _createParser(new FileInputStream(f), _createContext(f, true));
@@ -41,4 +45,25 @@ public class ServerLogFactory extends JsonFactory {
                 _parserFeatures,
                 _objectCodec);
     }
+
+    @Override
+    public JsonGenerator createGenerator(OutputStream out, JsonEncoding enc) throws IOException {
+        throw new UnsupportedOperationException("Unsupported for generating server logs");
+    }
+
+    @Override
+    public JsonGenerator createGenerator(OutputStream out) throws IOException {
+        throw new UnsupportedOperationException("Unsupported for generating server logs");
+    }
+
+    @Override
+    public JsonGenerator createGenerator(Writer writer) throws IOException {
+        throw new UnsupportedOperationException("Unsupported for generating server logs");
+    }
+
+    @Override
+    public JsonGenerator createGenerator(File f, JsonEncoding enc) throws IOException {
+        throw new UnsupportedOperationException("Unsupported for generating server logs");
+    }
 }
+

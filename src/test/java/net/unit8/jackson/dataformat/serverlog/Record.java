@@ -9,6 +9,7 @@ import java.util.Map;
 public class Record implements Serializable {
     private final Map<String, String> results = new HashMap<>(32);
     private String a;
+    private long timestamp;
 
     @Field("STRING:request.firstline.uri.query.*")
     public void setQueryDeepMany(final String name, final String value) {
@@ -24,6 +25,12 @@ public class Record implements Serializable {
     public void setA(final String value) {
         this.a = value;
     }
+
+    @Field("TIME.YEAR:request.receive.time.last.year")
+    public void setTimestamp(final Long value) {
+        this.timestamp = value;
+    }
+
     @Override
     public String toString() {
         return results.toString();
