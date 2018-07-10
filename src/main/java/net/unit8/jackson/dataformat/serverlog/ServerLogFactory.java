@@ -2,7 +2,6 @@ package net.unit8.jackson.dataformat.serverlog;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.IOContext;
-import net.unit8.jackson.dataformat.serverlog.impl.ServerLogDecoder;
 
 import java.io.*;
 import java.net.URL;
@@ -36,6 +35,11 @@ public class ServerLogFactory extends JsonFactory {
     @Override
     public JsonParser createParser(byte[] data, int offset, int len) throws IOException {
         return _createParser(data, offset, len, _createContext(data, true));
+    }
+
+    @Override
+    public Version version() {
+        return PackageVersion.VERSION;
     }
 
     protected JsonParser _createParser(char[] data, int offset, int len, IOContext ctxt,

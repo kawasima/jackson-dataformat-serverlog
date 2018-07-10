@@ -27,3 +27,29 @@ Pojo res = mapper.readerFor(Pojo.class)
     .with(schema)
     .readValue(logEntry);
 ```
+
+### Bean settings
+
+These properties are available in `@JsonProperty`.
+
+|Propety name|Description|
+|:------|:------|
+|HTTP.URI:request.firstline.uri|A request URI|
+|HTTP.QUERYSTRING:request.firstline.uri.query|A raw querystring|
+|STRING:request.firstline.uri.query.[param-name]|A value of a query parameter|
+|IP:connection.client.host||
+|NUMBER:connection.client.logname||
+|STRING:connection.client.user||
+|BYTESCLF:response.body.bytes||
+|HTTP.URI:request.referer||
+|HTTP.USERAGENT:request.user-agent||
+|TIME.STAMP:request.receive.time||
+|TIME.DAY:request.receive.time.day||
+|TIME.MONTHNAME:request.receive.time.monthname||
+|TIME.MONTH:request.receive.time.month||
+|TIME.YEAR:request.receive.time.year||
+|TIME.HOUR:request.receive.time.hour||
+|TIME.MINUTE:request.receive.time.minute||
+|TIME.SECOND:request.receive.time.second||
+|TIME.MILLISECOND:request.receive.time.millisecond||
+|TIME.ZONE:request.receive.time.zone||
