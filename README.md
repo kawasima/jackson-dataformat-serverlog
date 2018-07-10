@@ -2,7 +2,17 @@
 
 Jackson (Java) data format module that supports reading apache or nginx log files.
 
+## 
+
 ## Usage
+
+```xml
+	<dependency>
+	    <groupId>net.unit8.jackson.dataformat</groupId>
+	    <artifactId>jackson-dataformat-serverlog</artifactId>
+	    <version>0.1.0</version>
+	</dependency>
+```
 
 When creating a ObjectMapper with `ServerLogFactory`, you can use it as a deserializer for a server log file.
 
